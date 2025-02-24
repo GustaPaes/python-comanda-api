@@ -9,7 +9,7 @@ POST http://127.0.0.1:8000/funcionario/ HTTP/1.1
 content-type: application/json
 
 {
-    "nome": "Luciano Coelho",
+    "nome": "Gustavo Paes de Liz",
     "matricula": "lu12353",
     "cpf": "1",
     "telefone": "tel2383738",
@@ -22,7 +22,7 @@ PUT http://127.0.0.1:8000/funcionario/2 HTTP/1.1
 content-type: application/json
 
 {
-    "nome": "Luciano Coelho",
+    "nome": "Gustavo Paes de Liz",
     "matricula": "lu12353",
     "cpf": "1",
     "telefone": "tel2383738",

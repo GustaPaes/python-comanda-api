@@ -9,7 +9,7 @@ POST http://127.0.0.1:8000/cliente/ HTTP/1.1
 content-type: application/json
 
 {
-    "nome": "Maria Silva",
+    "nome": "Gustavo Paes de Liz",
     "cpf": "24095672072",
     "telefone": "11987654321"
 }
@@ -19,7 +19,7 @@ PUT http://127.0.0.1:8000/cliente/2 HTTP/1.1
 content-type: application/json
 
 {
-    "nome": "Maria Souza",
+    "nome": "Gustavo Paes de Liz",
     "cpf": "24095672072",
     "telefone": "21988776655"
 }
