@@ -4,8 +4,13 @@ from fastapi import APIRouter
 from domain.entities.Produto import Produto
 import db
 from infra.orm.ProdutoModel import ProdutoDB
+import base64
 
 router = APIRouter()
+
+def converter_base64_para_bytes(base64_string):
+    base64_bytes = base64_string.split(",")[1]  # Remove o prefixo 'data:image/png;base64,'
+    return base64.b64decode(base64_bytes)
 
 @router.get("/produto/", tags=["Produto"])
 async def get_produto():
@@ -40,8 +45,10 @@ async def post_produto(corpo: Produto):
     try:
         session = db.Session()
 
+        foto_bytes = converter_base64_para_bytes(corpo.foto)
+
         # cria um novo objeto com os dados da requisição
-        dados = ProdutoDB(None, corpo.nome, corpo.descricao, corpo.foto, corpo.valor_unitario)
+        dados = ProdutoDB(None, corpo.nome, corpo.descricao, foto_bytes, corpo.valor_unitario)
 
         session.add(dados)
         # session.flush()
