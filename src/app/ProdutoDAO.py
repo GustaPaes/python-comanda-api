@@ -51,7 +51,10 @@ async def post_produto(corpo: Produto):
     try:
         session = db.Session()
 
-        foto_bytes = converter_base64_para_bytes(corpo.foto)
+        if corpo.foto is not None:
+            foto_bytes = converter_base64_para_bytes(corpo.foto)
+        else:
+            foto_bytes = None
 
         # cria um novo objeto com os dados da requisição
         dados = ProdutoDB(None, corpo.nome, corpo.descricao, foto_bytes, corpo.valor_unitario)
@@ -78,7 +81,8 @@ async def put_produto(id: int, corpo: Produto):
         # atualiza os dados com base no corpo da requisição
         dados.nome = corpo.nome
         dados.descricao = corpo.descricao
-        dados.foto = converter_base64_para_bytes(corpo.foto)
+        if corpo.foto is not None:
+            dados.foto = converter_base64_para_bytes(corpo.foto)
         dados.valor_unitario = corpo.valor_unitario
         
         session.add(dados)

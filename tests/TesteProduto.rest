@@ -11,7 +11,6 @@ content-type: application/json
 {
     "nome": "Pastel de Carne",
     "descricao": "Pastel tradicional com carne moída",
-    "foto": "url",
     "valor_unitario": 12.50
 }
 
@@ -22,7 +21,6 @@ content-type: application/json
 {
     "nome": "Pastel de Frango",
     "descricao": "Pastel com recheio de frango desfiado",
-    "foto": "nova_url",
     "valor_unitario": 11.99
 }
 
