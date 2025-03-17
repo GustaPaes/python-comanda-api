@@ -5,7 +5,13 @@ from domain.entities.Funcionario import Funcionario
 import db
 from infra.orm.FuncionarioModel import FuncionarioDB
 
-router = APIRouter()
+# import da segurança
+from typing import Annotated
+from fastapi import Depends
+from security import get_current_active_user, User
+
+# dependências de forma global
+router = APIRouter( dependencies=[Depends(get_current_active_user)] )
 
 @router.get("/funcionario/", tags=["Funcionário"])
 async def get_funcionario():

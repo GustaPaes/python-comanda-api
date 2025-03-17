@@ -6,7 +6,13 @@ import db
 from infra.orm.ProdutoModel import ProdutoDB
 import base64
 
-router = APIRouter()
+# import da segurança
+from typing import Annotated
+from fastapi import Depends
+from security import get_current_active_user, User
+
+# dependências de forma global
+router = APIRouter( dependencies=[Depends(get_current_active_user)] )
 
 def converter_base64_para_bytes(base64_string):
     base64_bytes = base64_string.split(",")[1]  # Remove o prefixo 'data:image/png;base64,'
