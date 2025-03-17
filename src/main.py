@@ -1,4 +1,5 @@
 # GUSTAVO PAES DE LIZ
+
 from fastapi import FastAPI
 from settings import HOST, PORT, RELOAD
 import uvicorn
