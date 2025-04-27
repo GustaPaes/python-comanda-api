@@ -30,4 +30,6 @@ docker run -d -it --name comanda-api -p 4443:4443 gustapaes/comanda-api
 ## Passo 6
 docker compose up -d
 
+## Para visualização no Docker pode ser utilizado: https://127.0.0.1:4443/docs
+
 OBS: Alguns passos não são necessarios, desta forma estão subindo no docker local manualmente, subindo no hub do docker e também subindo usando o compose, que seria esse ultimo passo, que esta subindo completo inclusive com banco MYSQL.
