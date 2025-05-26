@@ -9,6 +9,7 @@ from infra.orm.FuncionarioModel import FuncionarioDB
 from typing import Annotated
 from fastapi import Depends
 from security import get_current_active_user, User
+import bcrypt
 
 # dependências de forma global
 router = APIRouter( dependencies=[Depends(get_current_active_user)] )
@@ -45,13 +46,21 @@ async def get_funcionario(id: int):
 async def post_funcionario(corpo: Funcionario):
     try:
         session = db.Session()
-        # cria um novo objeto com os dados da requisição
-        dados = FuncionarioDB(None, corpo.nome, corpo.matricula,
-
-        corpo.cpf, corpo.telefone, corpo.grupo, corpo.senha)
+        
+        # Gera o hash da senha
+        senha_hash = bcrypt.hashpw(corpo.senha.encode('utf-8'), bcrypt.gensalt())
+        
+        dados = FuncionarioDB(
+            None, 
+            corpo.nome, 
+            corpo.matricula,
+            corpo.cpf, 
+            corpo.telefone, 
+            corpo.grupo, 
+            senha_hash.decode('utf-8')  # Armazena o hash como string
+        )
 
         session.add(dados)
-        # session.flush()
         session.commit()
 
         return {"id": dados.id_funcionario}, 200
@@ -65,15 +74,17 @@ async def post_funcionario(corpo: Funcionario):
 async def put_funcionario(id: int, corpo: Funcionario):
     try:
         session = db.Session()
-
-        # busca os dados atuais pelo id
         dados = session.query(FuncionarioDB).filter(FuncionarioDB.id_funcionario == id).one()
 
-        # atualiza os dados com base no corpo da requisição
+        # Atualiza a senha somente se foi enviada nova senha
+        if corpo.senha:
+            senha_hash = bcrypt.hashpw(corpo.senha.encode('utf-8'), bcrypt.gensalt())
+            dados.senha = senha_hash.decode('utf-8')
+
+        # Mantém os outros campos
         dados.nome = corpo.nome
         dados.cpf = corpo.cpf
         dados.telefone = corpo.telefone
-        dados.senha = corpo.senha
         dados.matricula = corpo.matricula
         dados.grupo = corpo.grupo
         
@@ -111,13 +122,16 @@ async def login_funcionario(corpo: Funcionario):
     try:
         session = db.Session()
 
-        # one(), requer que haja apenas um resultado no conjunto de resultados
-        # é um erro se o banco de dados retornar 0, 2 ou mais resultados e uma exceção será gerada
-        dados = session.query(FuncionarioDB).filter(FuncionarioDB.cpf == corpo.cpf).filter(FuncionarioDB.senha == corpo.senha).one()
+        # Busca somente pelo CPF
+        dados = session.query(FuncionarioDB).filter(FuncionarioDB.cpf == corpo.cpf).one()
+        
+        # Verifica a senha usando bcrypt
+        if not bcrypt.checkpw(corpo.senha.encode('utf-8'), dados.senha.encode('utf-8')):
+            raise ValueError("Credenciais inválidas")
 
         return dados, 200
     except Exception as e:
-        return {"erro": str(e)}, 400
+        return {"erro": str(e)}, 401  # 401 Unauthorized
     finally:
         session.close()
 
