@@ -15,18 +15,40 @@ from security import get_current_active_user, User
 router = APIRouter( dependencies=[Depends(get_current_active_user)] )
 
 def converter_base64_para_bytes(base64_string):
-    base64_bytes = base64_string.split(",")[1]  # Remove o prefixo 'data:image/png;base64,'
-    return base64.b64decode(base64_bytes)
+    if "," in base64_string:
+        base64_data = base64_string.split(",")[1]
+    else:
+        base64_data = base64_string  # já é só base64 sem prefixo
+
+    return base64.b64decode(base64_data)
+
+def produto_to_dict(produto):
+    # converte os bytes da imagem para base64 com prefixo
+    if produto.foto:
+        foto_base64 = base64.b64encode(produto.foto).decode("utf-8")
+        mimetype = "image/jpeg"  # ou determine dinamicamente
+        foto = f"data:{mimetype};base64,{foto_base64}"
+    else:
+        foto = None
+
+    return {
+        "id_produto": produto.id_produto,
+        "nome": produto.nome,
+        "descricao": produto.descricao,
+        "foto": foto,
+        "valor_unitario": produto.valor_unitario
+    }
 
 @router.get("/produto/", tags=["Produto"])
 async def get_produto():
     try:
         session = db.Session()
-
-        # busca todos
         dados = session.query(ProdutoDB).all()
 
-        return dados, 200
+        # transforma todos os produtos em dicionário
+        resultado = [produto_to_dict(p) for p in dados]
+
+        return resultado, 200
     except Exception as e:
         return {"erro": str(e)}, 400
     finally:
@@ -36,11 +58,12 @@ async def get_produto():
 async def get_produto(id: int):
     try:
         session = db.Session()
+        dados = session.query(ProdutoDB).filter(ProdutoDB.id_produto == id).first()
 
-        # busca um com filtro
-        dados = session.query(ProdutoDB).filter(ProdutoDB.id_produto == id).all()
+        if not dados:
+            return {"erro": "Produto não encontrado"}, 404
 
-        return dados, 200
+        return produto_to_dict(dados), 200
     except Exception as e:
         return {"erro": str(e)}, 400
     finally:
