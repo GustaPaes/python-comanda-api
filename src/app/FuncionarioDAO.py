@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter
 from domain.entities.Funcionario import Funcionario
+from domain.entities.Funcionario import FuncionarioLogin
 import db
 from infra.orm.FuncionarioModel import FuncionarioDB
 
@@ -47,8 +48,11 @@ async def post_funcionario(corpo: Funcionario):
     try:
         session = db.Session()
         
-        # Gera o hash da senha
-        senha_hash = bcrypt.hashpw(corpo.senha.encode('utf-8'), bcrypt.gensalt())
+        # Hash da senha com bcrypt
+        senha_bytes = corpo.senha.encode('utf-8')
+        salt = bcrypt.gensalt()
+        senha_hash = bcrypt.hashpw(senha_bytes, salt)
+        senha_hash_str = senha_hash.decode('utf-8')
         
         dados = FuncionarioDB(
             None, 
@@ -57,19 +61,20 @@ async def post_funcionario(corpo: Funcionario):
             corpo.cpf, 
             corpo.telefone, 
             corpo.grupo, 
-            senha_hash.decode('utf-8')  # Armazena o hash como string
+            senha_hash_str
         )
-
+        
         session.add(dados)
         session.commit()
-
-        return {"id": dados.id_funcionario}, 200
+        
+        return {"mensagem": "Funcionário criado com sucesso", "id": corpo.id_funcionario}, 201
+        
     except Exception as e:
         session.rollback()
         return {"erro": str(e)}, 400
     finally:
         session.close()
-
+        
 @router.put("/funcionario/{id}", tags=["Funcionário"])
 async def put_funcionario(id: int, corpo: Funcionario):
     try:
@@ -78,7 +83,9 @@ async def put_funcionario(id: int, corpo: Funcionario):
 
         # Atualiza a senha somente se foi enviada nova senha
         if corpo.senha:
-            senha_hash = bcrypt.hashpw(corpo.senha.encode('utf-8'), bcrypt.gensalt())
+            senha_bytes = corpo.senha.encode('utf-8')
+            salt = bcrypt.gensalt()
+            senha_hash = bcrypt.hashpw(senha_bytes, salt)
             dados.senha = senha_hash.decode('utf-8')
 
         # Mantém os outros campos
@@ -118,7 +125,7 @@ async def delete_funcionario(id: int):
 
 # valida o cpf e senha informado pelo usuário
 @router.post("/funcionario/login/", tags=["Funcionário - Login"])
-async def login_funcionario(corpo: Funcionario):
+async def login_funcionario(corpo: FuncionarioLogin):
     try:
         session = db.Session()
 
@@ -126,12 +133,24 @@ async def login_funcionario(corpo: Funcionario):
         dados = session.query(FuncionarioDB).filter(FuncionarioDB.cpf == corpo.cpf).one()
         
         # Verifica a senha usando bcrypt
-        if not bcrypt.checkpw(corpo.senha.encode('utf-8'), dados.senha.encode('utf-8')):
-            raise ValueError("Credenciais inválidas")
-
-        return dados, 200
+        senha_bytes = corpo.senha.encode('utf-8')
+        hash_bytes = dados.senha.encode('utf-8')
+        
+        if bcrypt.checkpw(senha_bytes, hash_bytes):
+            # Retorna dados do funcionário sem a senha
+            return {
+                "id_funcionario": dados.id_funcionario,
+                "nome": dados.nome,
+                "grupo": dados.grupo,
+                "cpf": dados.cpf,
+                "telefone": dados.telefone,
+                "matricula": dados.matricula
+            }, 200
+        else:
+            return {"erro": "Credenciais inválidas"}, 401
+            
     except Exception as e:
-        return {"erro": str(e)}, 401  # 401 Unauthorized
+        return {"erro": str(e)}, 500
     finally:
         session.close()
 

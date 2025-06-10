@@ -25,9 +25,6 @@ docker tag comanda-api gustapaes/comanda-api
 docker push gustapaes/comanda-api
 
 ## Passo 5
-docker run -d -it --name comanda-api -p 4443:4443 gustapaes/comanda-api
-
-## Passo 6
 docker compose up -d
 
 ## Para visualização no Docker pode ser utilizado: https://127.0.0.1:4443/docs

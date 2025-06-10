@@ -2,6 +2,10 @@
 
 from pydantic import BaseModel
 
+class FuncionarioLogin(BaseModel):
+    cpf: str
+    senha: str
+
 class Funcionario(BaseModel):
     id_funcionario: int = None
     nome: str
